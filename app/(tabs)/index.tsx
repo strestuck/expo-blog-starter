@@ -1,116 +1,81 @@
-import { Image, StyleSheet, Linking } from "react-native";
-import { Link } from "expo-router";
+import React from 'react';
+import { StyleSheet, View, RefreshControl } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { FeaturedPostsCarousel } from '@/components/FeaturedPostsCarousel';
+import { RecentPostsList } from '@/components/RecentPostsList';
+import { usePosts } from '@/hooks/usePosts';
+import { useTranslation } from 'react-i18next';
+import { useThemeColor } from '@/hooks/useThemeColor';
 
 export default function HomeScreen() {
-  const handleVisitCodeGuide = () => {
-    Linking.openURL("https://codeguide.dev");
+  const { t } = useTranslation();
+  const {
+    featuredPosts,
+    recentPosts,
+    isLoading,
+    error,
+    refetch,
+  } = usePosts();
+
+  const backgroundColor = useThemeColor({}, 'background');
+  const tintColor = useThemeColor({}, 'tint');
+
+  const handleRefresh = async () => {
+    await refetch();
   };
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#ffffff", dark: "#1A1A1A" }}
-      headerImage={
-        <Image
-          source={require("@/assets/images/codeguide-logo.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-      }
-    >
-      <ThemedView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor }]} edges={['top']}>
+      <View style={styles.header}>
         <ThemedText type="title" style={styles.title}>
-          CodeGuide Starter Kit
+          {t('home.title')}
         </ThemedText>
+        <LanguageSwitcher compact={true} />
+      </View>
 
-        <ThemedText style={styles.description}>
-          A modern cross-platform mobile application starter template built with
-          Expo and Firebase, featuring authentication and real-time database
-          integration.
-        </ThemedText>
+      <ThemedView style={styles.content}>
+        <FeaturedPostsCarousel
+          posts={featuredPosts}
+          isLoading={isLoading}
+          error={error}
+          onRetry={refetch}
+        />
 
-        <ThemedView style={styles.ctaContainer}>
-          <ThemedView
-            style={styles.ctaButton}
-            onTouchEnd={handleVisitCodeGuide}
-          >
-            <ThemedText style={styles.ctaText}>Visit CodeGuide</ThemedText>
-          </ThemedView>
-        </ThemedView>
-
-        <ThemedView style={styles.featuresContainer}>
-          <ThemedText type="subtitle" style={styles.featuresTitle}>
-            Key Features
-          </ThemedText>
-          <ThemedText style={styles.featureItem}>
-            • Firebase Authentication
-          </ThemedText>
-          <ThemedText style={styles.featureItem}>
-            • Real-time Database Integration
-          </ThemedText>
-          <ThemedText style={styles.featureItem}>
-            • Cross-platform Support
-          </ThemedText>
-          <ThemedText style={styles.featureItem}>
-            • Modern UI Components
-          </ThemedText>
-          <ThemedText style={styles.featureItem}>
-            • File-based Routing
-          </ThemedText>
-        </ThemedView>
+        <RecentPostsList
+          posts={recentPosts}
+          isLoading={isLoading}
+          error={error}
+          onRetry={refetch}
+          onRefresh={handleRefresh}
+          isRefreshing={false}
+        />
       </ThemedView>
-    </ParallaxScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
   },
-  logo: {
-    height: 120,
-    width: "100%",
-    position: "absolute",
-    bottom: 20,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
   },
   title: {
-    fontSize: 28,
-    textAlign: "center",
-    marginBottom: 16,
+    fontSize: 24,
+    fontWeight: '700',
   },
-  description: {
-    textAlign: "center",
-    marginBottom: 32,
-    lineHeight: 24,
-  },
-  ctaContainer: {
-    alignItems: "center",
-    marginBottom: 40,
-  },
-  ctaButton: {
-    backgroundColor: "#007AFF",
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-  },
-  ctaText: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  featuresContainer: {
-    marginTop: 20,
-  },
-  featuresTitle: {
-    marginBottom: 16,
-  },
-  featureItem: {
-    marginBottom: 8,
-    fontSize: 16,
-    lineHeight: 24,
+  content: {
+    flex: 1,
   },
 });
